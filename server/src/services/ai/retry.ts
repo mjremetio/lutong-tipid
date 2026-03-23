@@ -39,7 +39,13 @@ function friendlyErrorMessage(error: unknown): string {
     return "Hindi kasya ang budget sa generated plan. Subukan ulit o dagdagan ang budget.";
   }
 
-  // Generic
+  // API key / permission errors
+  if (/API_KEY|permission|forbidden|403/i.test(raw)) {
+    return "May problema sa AI API key configuration. Please check GEMINI_API_KEY in your environment.";
+  }
+
+  // Generic — include raw for debugging
+  console.error("[friendlyErrorMessage] Unhandled error:", raw);
   return "May problema sa pag-generate ng meal plan. Subukan ulit mamaya.";
 }
 
