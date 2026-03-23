@@ -62,7 +62,7 @@ ALWAYS use the Filipino/Taglish dish name that a Pinoy family actually says at h
 5. "budget_summary.total_estimated_cost" MUST EQUAL the sum of all 7 daily_costs.
 6. "budget_summary.remaining_budget" = weekly_budget - total_estimated_cost.
 7. "budget_summary.cost_per_person_per_day" = total_estimated_cost / (family_size × 7).
-8. Target each meal at around PHP ${budgetPerMeal} to stay within budget.
+8. Target each meal at around PHP ${Math.floor(budgetPerMeal * 0.85)} to stay safely within budget (aim for 85% of budget to leave buffer).
 9. Scale ingredient quantities for ${params.family_size} people.
 10. DO NOT invent prices. If an ingredient is not in the reference table, estimate conservatively based on similar items.
 
@@ -131,7 +131,7 @@ RESPONSE FORMAT:
 - Weekly budget: PHP ${params.weekly_budget} (HARD LIMIT — do NOT exceed)
 - Family size: ${params.family_size} people (scale all portions for this many)
 - Meals per day: ${params.meals_per_day.join(", ")} (${totalMealsPerDay} meals/day, ${totalMealsPerWeek} meals/week)
-- Target per meal: ~PHP ${budgetPerMeal}
+- Target per meal: ~PHP ${Math.floor(budgetPerMeal * 0.85)} (aim for 85% of budget limit)
 - ${restrictions}
 - Region: ${params.region || "metro_manila"}
 

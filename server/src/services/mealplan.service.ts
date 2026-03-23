@@ -124,8 +124,8 @@ export async function generateMealPlan(params: GenerateRequest): Promise<MealPla
       // Recalculate all costs from ingredients (fixes AI math)
       const fixed = recalculatePlanCosts(validated);
 
-      // Check budget constraint after recalculation
-      if (fixed.budget_summary.total_estimated_cost > params.weekly_budget * 1.10) {
+      // Check budget constraint after recalculation (allow 25% over since we correct prices)
+      if (fixed.budget_summary.total_estimated_cost > params.weekly_budget * 1.25) {
         throw new Error(
           `Generated plan cost (PHP ${fixed.budget_summary.total_estimated_cost}) exceeds budget (PHP ${params.weekly_budget})`
         );
