@@ -2,7 +2,7 @@ import rateLimit from "express-rate-limit";
 
 export const generateLimiter = rateLimit({
   windowMs: 60 * 1000,
-  max: 1,
+  max: 5,
   message: {
     error: "Rate limit exceeded",
     message: "Isang meal plan generation lang per minute. Maghintay ng konti bago mag-try ulit!",

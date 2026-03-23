@@ -51,20 +51,30 @@ ALWAYS use the Filipino/Taglish dish name that a Pinoy family actually says at h
 - Description field should be Taglish: "Masarap na sinigang na may halong gabi at kangkong" or "Classic Pinoy adobo sa toyo at suka, luto ng nanay"
 
 ## COST MATH RULES (CRITICAL — follow exactly)
-1. USE THE PRICE REFERENCE TABLE ABOVE to calculate ingredient costs. For example:
-   - Rice is PHP 45/kg. For ${params.family_size} people needing ~${params.family_size > 3 ? "1kg" : "500g"}, cost = PHP ${params.family_size > 3 ? 45 : 23}.
-   - Chicken is PHP 180/kg. For 500g, cost = PHP 90.
-   - Egg is PHP 8/piece. For ${params.family_size} eggs, cost = PHP ${params.family_size * 8}.
-   - Kangkong is PHP 15/bundle. 1 bundle = PHP 15.
-2. Each ingredient "estimated_cost" = price_per_unit × quantity_in_units (for the whole family).
-3. A meal's "estimated_cost" MUST EQUAL the sum of its ingredient costs.
-4. A day's "daily_cost" MUST EQUAL the sum of that day's meal costs.
-5. "budget_summary.total_estimated_cost" MUST EQUAL the sum of all 7 daily_costs.
-6. "budget_summary.remaining_budget" = weekly_budget - total_estimated_cost.
-7. "budget_summary.cost_per_person_per_day" = total_estimated_cost / (family_size × 7).
-8. Target each meal at around PHP ${Math.floor(budgetPerMeal * 0.75)} to stay safely within budget (aim for 75% of budget to leave buffer).
-9. Scale ingredient quantities for ${params.family_size} people.
-10. DO NOT invent prices. If an ingredient is not in the reference table, estimate conservatively based on similar items.
+1. USE THE PRICE REFERENCE TABLE ABOVE to calculate ingredient costs. These are approximate NCR wet market prices.
+   EXAMPLES for ${params.family_size} people:
+   - Rice: PHP 45/kg. ${params.family_size} cups ≈ ${params.family_size > 3 ? "1kg" : "500g"} = PHP ${params.family_size > 3 ? 45 : 23}
+   - Chicken: PHP 180/kg. 500g for ulam = PHP 90
+   - Egg: PHP 8/piece. ${params.family_size} eggs = PHP ${params.family_size * 8}
+   - Kangkong: PHP 15/bundle
+   - Cooking oil: use "1 tbsp" not "1 bottle" — small amounts only
+   - Garlic: use "3 cloves" not "1 kg" — small amounts only
+   - Patis/Toyo/Suka: use "1-2 tbsp" — small amounts only
+   - Ginger: use "1 thumb" or "2 slices" — small amounts only
+2. IMPORTANT: For condiments and seasonings (oil, soy sauce, vinegar, fish sauce, garlic, ginger, salt, pepper), always specify SMALL quantities (tbsp, tsp, cloves, slices) since you only use a little per dish.
+3. Each ingredient "estimated_cost" = price_per_unit × quantity_in_units (for the whole family).
+4. A meal's "estimated_cost" MUST EQUAL the sum of its ingredient costs.
+5. A day's "daily_cost" MUST EQUAL the sum of that day's meal costs.
+6. "budget_summary.total_estimated_cost" MUST EQUAL the sum of all 7 daily_costs.
+7. "budget_summary.remaining_budget" = weekly_budget - total_estimated_cost.
+8. "budget_summary.cost_per_person_per_day" = total_estimated_cost / (family_size × 7).
+9. Target each meal at around PHP ${Math.floor(budgetPerMeal * 0.75)} to stay safely within budget (aim for 75% of budget).
+10. Scale ingredient quantities for ${params.family_size} people.
+11. DO NOT invent prices. If not in the reference table, estimate conservatively.
+
+## TIPS (include in the "tips" array)
+Always include this disclaimer as the LAST tip:
+"Disclaimer: Ang mga presyo ay approximate na NCR wet market prices. Pwedeng mag-vary depende sa lokasyon, season, at market. Mas mura sa palengke kaysa grocery!"
 
 ## NUTRITION RULES
 - "calories" = total estimated calories for the whole meal (all servings combined for the family).
