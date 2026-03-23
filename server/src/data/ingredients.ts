@@ -102,6 +102,97 @@ export const INGREDIENT_PRICES: IngredientPrice[] = [
   { name: "Butter", unit: "pack (100g)", price_per_unit: 35, category: "Essentials", aliases: ["margarine", "star margarine"] },
 ];
 
+/**
+ * Find a matching ingredient from our price database.
+ * Matches by name or aliases (case-insensitive, partial match).
+ */
+export function findIngredientPrice(name: string): IngredientPrice | null {
+  const lower = name.toLowerCase().trim();
+
+  // Exact match first
+  for (const item of INGREDIENT_PRICES) {
+    if (item.name.toLowerCase() === lower) return item;
+    if (item.aliases?.some((a) => a.toLowerCase() === lower)) return item;
+  }
+
+  // Partial match (ingredient name contains or is contained in search)
+  for (const item of INGREDIENT_PRICES) {
+    const itemLower = item.name.toLowerCase();
+    if (lower.includes(itemLower) || itemLower.includes(lower)) return item;
+    if (item.aliases?.some((a) => {
+      const aLower = a.toLowerCase();
+      return lower.includes(aLower) || aLower.includes(lower);
+    })) return item;
+  }
+
+  return null;
+}
+
+/**
+ * Estimate cost for an ingredient based on our price table and the quantity string.
+ * Returns null if we can't determine a reasonable estimate.
+ */
+export function estimateIngredientCost(
+  name: string,
+  quantity: string,
+  familySize: number
+): number | null {
+  const item = findIngredientPrice(name);
+  if (!item) return null;
+
+  const qty = quantity.toLowerCase().trim();
+  const pricePerUnit = item.price_per_unit;
+
+  // Try to extract a numeric amount
+  const numMatch = qty.match(/^([\d.\/]+)\s*/);
+  let amount = 1;
+  if (numMatch) {
+    const raw = numMatch[1];
+    if (raw.includes("/")) {
+      const [num, den] = raw.split("/").map(Number);
+      amount = den ? num / den : 1;
+    } else {
+      amount = parseFloat(raw) || 1;
+    }
+  }
+
+  // Convert grams to kg if the unit is kg-based
+  if (item.unit.includes("kg")) {
+    if (qty.includes("g") && !qty.includes("kg")) {
+      // "500g" → 0.5 kg
+      const grams = parseFloat(qty.replace(/[^\d.]/g, "")) || 0;
+      if (grams > 0) {
+        return Math.round((grams / 1000) * pricePerUnit * 100) / 100;
+      }
+    }
+    if (qty.includes("kg")) {
+      return Math.round(amount * pricePerUnit * 100) / 100;
+    }
+  }
+
+  // Handle piece-based items (eggs, sayote, etc.)
+  if (item.unit.includes("piece") || item.unit.includes("pcs")) {
+    if (qty.match(/(\d+)\s*(pcs?|pieces?|piraso)/i)) {
+      const pcs = parseInt(qty.match(/(\d+)/)?.[1] || "1", 10);
+      return Math.round(pcs * pricePerUnit * 100) / 100;
+    }
+    return Math.round(amount * pricePerUnit * 100) / 100;
+  }
+
+  // Handle bundle-based items
+  if (item.unit.includes("bundle")) {
+    return Math.round(amount * pricePerUnit * 100) / 100;
+  }
+
+  // Handle pack/can based items
+  if (item.unit.includes("pack") || item.unit.includes("can") || item.unit.includes("bottle")) {
+    return Math.round(amount * pricePerUnit * 100) / 100;
+  }
+
+  // Default: multiply amount by unit price
+  return Math.round(amount * pricePerUnit * 100) / 100;
+}
+
 export function getIngredientPriceTable(): string {
   const header = "INGREDIENT PRICE REFERENCE (Philippine Pesos):\n";
   const separator = "-".repeat(60) + "\n";

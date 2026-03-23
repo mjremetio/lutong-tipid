@@ -2,10 +2,10 @@ import rateLimit from "express-rate-limit";
 
 export const generateLimiter = rateLimit({
   windowMs: 60 * 1000,
-  max: 5,
+  max: 1,
   message: {
     error: "Rate limit exceeded",
-    message: "Too many meal plan generation requests. Please wait a minute before trying again.",
+    message: "Isang meal plan generation lang per minute. Maghintay ng konti bago mag-try ulit!",
   },
   standardHeaders: true,
   legacyHeaders: false,
@@ -13,7 +13,7 @@ export const generateLimiter = rateLimit({
 
 export const swapLimiter = rateLimit({
   windowMs: 60 * 1000,
-  max: 10,
+  max: 3,
   message: {
     error: "Rate limit exceeded",
     message: "Too many swap requests. Please wait a minute before trying again.",

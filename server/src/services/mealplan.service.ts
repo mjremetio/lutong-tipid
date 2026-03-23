@@ -4,6 +4,7 @@ import { generateChatCompletion } from "./ai/groq.service.js";
 import { SYSTEM_001_MEAL_PLAN, SYSTEM_002_SWAP } from "./ai/prompts.js";
 import { MealPlanResponseSchema, SwapMealResponseSchema } from "./ai/schemas.js";
 import { withRetry } from "./ai/retry.js";
+import { estimateIngredientCost } from "../data/ingredients.js";
 import type { GenerateRequest, MealPlanResponse, SwapRequest, Meal } from "../types/index.js";
 
 /** Round to 2 decimal places */
@@ -12,18 +13,51 @@ function r2(n: number): number {
 }
 
 /**
+ * Correct an ingredient's cost using our price database.
+ * If the AI's cost is way off from our reference, replace it.
+ */
+function correctIngredientCost(
+  ingredient: { name: string; quantity: string; estimated_cost: number },
+  familySize: number
+): number {
+  const aiCost = ingredient.estimated_cost || 0;
+  const refCost = estimateIngredientCost(ingredient.name, ingredient.quantity, familySize);
+
+  if (refCost === null) {
+    // Not in our database — keep AI's cost but ensure it's reasonable
+    // Cap single ingredient at PHP 200 and minimum at PHP 2
+    return Math.max(2, Math.min(200, aiCost));
+  }
+
+  // If AI cost is within 2x of reference, keep AI's (it may account for quantity nuance)
+  if (aiCost > 0 && aiCost >= refCost * 0.5 && aiCost <= refCost * 2) {
+    return aiCost;
+  }
+
+  // Otherwise use our reference price
+  return refCost;
+}
+
+/**
  * Recalculate all costs bottom-up from ingredient costs.
- * Fixes AI math inconsistencies so everything adds up correctly.
+ * Corrects AI pricing errors using our ingredient price database,
+ * then recalculates all sums so everything adds up correctly.
  */
 function recalculatePlanCosts(plan: MealPlanResponse): MealPlanResponse {
+  const familySize = plan.family_size || 1;
+
   const days = plan.days.map((day) => {
     const meals = day.meals.map((meal) => {
-      // Meal cost = sum of ingredient costs
-      const ingredientTotal = meal.ingredients.reduce(
-        (sum, ing) => sum + (ing.estimated_cost || 0),
+      // Correct each ingredient cost, then sum
+      const correctedIngredients = meal.ingredients.map((ing) => ({
+        ...ing,
+        estimated_cost: r2(correctIngredientCost(ing, familySize)),
+      }));
+      const ingredientTotal = correctedIngredients.reduce(
+        (sum, ing) => sum + ing.estimated_cost,
         0
       );
-      return { ...meal, estimated_cost: r2(ingredientTotal) };
+      return { ...meal, ingredients: correctedIngredients, estimated_cost: r2(ingredientTotal) };
     });
 
     // Daily cost = sum of meal costs
@@ -62,13 +96,17 @@ function recalculatePlanCosts(plan: MealPlanResponse): MealPlanResponse {
   };
 }
 
-/** Recalculate a single swapped meal's cost from its ingredients */
-function recalculateMealCost(meal: Meal): Meal {
-  const ingredientTotal = meal.ingredients.reduce(
-    (sum, ing) => sum + (ing.estimated_cost || 0),
+/** Recalculate a single swapped meal's cost from its ingredients, correcting prices */
+function recalculateMealCost(meal: Meal, familySize: number = 4): Meal {
+  const correctedIngredients = meal.ingredients.map((ing) => ({
+    ...ing,
+    estimated_cost: r2(correctIngredientCost(ing, familySize)),
+  }));
+  const ingredientTotal = correctedIngredients.reduce(
+    (sum, ing) => sum + ing.estimated_cost,
     0
   );
-  return { ...meal, estimated_cost: r2(ingredientTotal) };
+  return { ...meal, ingredients: correctedIngredients, estimated_cost: r2(ingredientTotal) };
 }
 
 export async function generateMealPlan(params: GenerateRequest): Promise<MealPlanResponse> {
@@ -156,5 +194,5 @@ export async function swapMeal(params: SwapRequest): Promise<Meal> {
   );
 
   // Recalculate the swapped meal's cost from its ingredients
-  return recalculateMealCost(result.meal);
+  return recalculateMealCost(result.meal, plan_data.family_size);
 }
