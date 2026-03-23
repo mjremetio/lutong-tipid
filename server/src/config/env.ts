@@ -21,7 +21,7 @@ function getEnvVar(key: string, defaultValue?: string): string {
 
 export const env: EnvConfig = {
   PORT: parseInt(getEnvVar("PORT", "3001"), 10),
-  DATABASE_URL: getEnvVar("DATABASE_URL"),
+  DATABASE_URL: getEnvVar("DATABASE_URL", ""),
   GROQ_API_KEY: getEnvVar("GROQ_API_KEY"),
   GROQ_MODEL: getEnvVar("GROQ_MODEL", "llama-3.3-70b-versatile"),
   CLIENT_URL: getEnvVar("CLIENT_URL", "http://localhost:5173"),

@@ -1,29 +1,34 @@
 import Groq from "groq-sdk";
 import { env } from "../../config/env";
 
-// Startup check: ensure GROQ_API_KEY is set and not a placeholder
 const PLACEHOLDER_VALUES = [
   "your-api-key-here",
   "your_api_key_here",
-  "GROQ_API_KEY",
+  "groq_api_key",
   "xxx",
   "placeholder",
   "changeme",
   "your-groq-api-key",
+  "your_groq_api_key_here",
 ];
 
-if (
-  !env.GROQ_API_KEY ||
-  PLACEHOLDER_VALUES.includes(env.GROQ_API_KEY.toLowerCase())
-) {
-  throw new Error(
-    "GROQ_API_KEY is missing or set to a placeholder value. Please set a valid API key in your environment."
-  );
-}
+let _groq: Groq | null = null;
 
-const groq = new Groq({
-  apiKey: env.GROQ_API_KEY,
-});
+function getGroqClient(): Groq {
+  if (_groq) return _groq;
+
+  if (
+    !env.GROQ_API_KEY ||
+    PLACEHOLDER_VALUES.includes(env.GROQ_API_KEY.toLowerCase())
+  ) {
+    throw new Error(
+      "GROQ_API_KEY is missing or set to a placeholder value. Please set a valid API key in your environment."
+    );
+  }
+
+  _groq = new Groq({ apiKey: env.GROQ_API_KEY });
+  return _groq;
+}
 
 interface CompletionOptions {
   temperature?: number;
@@ -35,6 +40,7 @@ export async function generateChatCompletion(
   userMessage: string,
   options: CompletionOptions = {}
 ): Promise<string> {
+  const groq = getGroqClient();
   const { temperature = 0.7, maxTokens = 4096 } = options;
 
   const response = await groq.chat.completions.create({
