@@ -1,0 +1,9 @@
+{
+  "version": 2,
+  "buildCommand": "cd client && npm install && npm run build && cd ../server && npm install",
+  "outputDirectory": "client/dist",
+  "installCommand": "echo 'skip'",
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api" }
+  ]
+}

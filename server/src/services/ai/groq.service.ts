@@ -1,0 +1,67 @@
+import Groq from "groq-sdk";
+import { env } from "../../config/env";
+
+// Startup check: ensure GROQ_API_KEY is set and not a placeholder
+const PLACEHOLDER_VALUES = [
+  "your-api-key-here",
+  "your_api_key_here",
+  "GROQ_API_KEY",
+  "xxx",
+  "placeholder",
+  "changeme",
+  "your-groq-api-key",
+];
+
+if (
+  !env.GROQ_API_KEY ||
+  PLACEHOLDER_VALUES.includes(env.GROQ_API_KEY.toLowerCase())
+) {
+  throw new Error(
+    "GROQ_API_KEY is missing or set to a placeholder value. Please set a valid API key in your environment."
+  );
+}
+
+const groq = new Groq({
+  apiKey: env.GROQ_API_KEY,
+});
+
+interface CompletionOptions {
+  temperature?: number;
+  maxTokens?: number;
+}
+
+export async function generateChatCompletion(
+  systemPrompt: string,
+  userMessage: string,
+  options: CompletionOptions = {}
+): Promise<string> {
+  const { temperature = 0.7, maxTokens = 4096 } = options;
+
+  const response = await groq.chat.completions.create({
+    model: env.GROQ_MODEL,
+    messages: [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: userMessage },
+    ],
+    response_format: { type: "json_object" },
+    temperature,
+    max_tokens: maxTokens,
+  });
+
+  const content = response.choices[0]?.message?.content;
+
+  if (!content) {
+    throw new Error("No response content received from Groq");
+  }
+
+  return stripMarkdownFences(content);
+}
+
+function stripMarkdownFences(text: string): string {
+  const fenceRegex = /^```(?:json)?\s*\n?([\s\S]*?)\n?\s*```$/;
+  const match = text.trim().match(fenceRegex);
+  if (match) {
+    return match[1].trim();
+  }
+  return text.trim();
+}
