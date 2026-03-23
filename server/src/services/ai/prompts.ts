@@ -62,7 +62,7 @@ ALWAYS use the Filipino/Taglish dish name that a Pinoy family actually says at h
 5. "budget_summary.total_estimated_cost" MUST EQUAL the sum of all 7 daily_costs.
 6. "budget_summary.remaining_budget" = weekly_budget - total_estimated_cost.
 7. "budget_summary.cost_per_person_per_day" = total_estimated_cost / (family_size × 7).
-8. Target each meal at around PHP ${Math.floor(budgetPerMeal * 0.85)} to stay safely within budget (aim for 85% of budget to leave buffer).
+8. Target each meal at around PHP ${Math.floor(budgetPerMeal * 0.75)} to stay safely within budget (aim for 75% of budget to leave buffer).
 9. Scale ingredient quantities for ${params.family_size} people.
 10. DO NOT invent prices. If an ingredient is not in the reference table, estimate conservatively based on similar items.
 
@@ -127,13 +127,35 @@ RESPONSE FORMAT:
     ? `Dietary restrictions: ${params.dietary_restrictions.join(", ")}`
     : "No dietary restrictions.";
 
+  // Budget guidance based on tightness
+  const budgetPerPersonPerMeal = params.weekly_budget / (params.family_size * totalMealsPerWeek);
+  let budgetGuidance = "";
+  if (budgetPerPersonPerMeal < 30) {
+    budgetGuidance = `
+SUPER TIGHT BUDGET — PHP ${budgetPerPersonPerMeal.toFixed(0)} per person per meal only!
+You MUST use ultra-budget dishes. Keep ingredient count LOW (3-5 per dish max).
+USE THESE CHEAP MEALS:
+- Breakfast (₱20-40 total): Sinangag + Itlog (₱25), Lugaw (₱20), Champorado (₱25), Pandesal + Palaman (₱30), Tuyo at Kamatis (₱30), Sardinas + Kanin (₱25)
+- Lunch/Dinner (₱40-80 total): Ginisang Monggo (₱45), Ginisang Pechay (₱35), Tortang Talong (₱40), Sardinas Guisado (₱30), Pritong Galunggong (₱50), Ginisang Sitaw (₱35), Nilagang Gulay (₱40), Pinakbet (₱50), Ginataang Kalabasa (₱45)
+- AVOID expensive dishes: No Sinigang na Baboy, Adobong Baboy, Inihaw na Liempo, Kare-Kare, Crispy Pata
+- Use small meat portions: 250g meat for ${params.family_size} people, supplement with veggies and rice.
+- Use cheap proteins: eggs (₱8 each), monggo (₱30/pack), sardinas (₱20/can), galunggong (₱60/500g), tuyo/dilis.`;
+  } else if (budgetPerPersonPerMeal < 50) {
+    budgetGuidance = `
+MODERATE BUDGET — PHP ${budgetPerPersonPerMeal.toFixed(0)} per person per meal.
+Mix budget and mid-range dishes. Keep most meals under ₱100 total.
+Good choices: Adobong Manok, Tinolang Manok, Ginisang Monggo, Pritong Galunggong, Pancit Bihon, Tortang Talong, Sinigang na Bangus.`;
+  }
+
   const user = `Create a 7-day meal plan with these requirements:
 - Weekly budget: PHP ${params.weekly_budget} (HARD LIMIT — do NOT exceed)
 - Family size: ${params.family_size} people (scale all portions for this many)
 - Meals per day: ${params.meals_per_day.join(", ")} (${totalMealsPerDay} meals/day, ${totalMealsPerWeek} meals/week)
-- Target per meal: ~PHP ${Math.floor(budgetPerMeal * 0.85)} (aim for 85% of budget limit)
+- Target per meal: ~PHP ${Math.floor(budgetPerMeal * 0.75)} (aim for 75% of budget limit to leave buffer)
+- Budget per person per meal: PHP ${budgetPerPersonPerMeal.toFixed(0)}
 - ${restrictions}
 - Region: ${params.region || "metro_manila"}
+${budgetGuidance}
 
 REMINDERS:
 - meal.estimated_cost = SUM of its ingredient costs (do the math!)
@@ -141,7 +163,8 @@ REMINDERS:
 - total_estimated_cost = SUM of all 7 daily_costs
 - total_estimated_cost MUST be ≤ PHP ${params.weekly_budget}
 - Use Filipino dish names like Tapsilog, Ginisang Monggo, Sinigang, Adobo — NOT English translations.
-- Scale quantities for ${params.family_size} people (e.g., ${params.family_size} cups of rice, not 1).`;
+- Scale quantities for ${params.family_size} people (e.g., ${params.family_size} cups of rice, not 1).
+- Keep ingredients per meal to 3-6 items only. Use small quantities.`;
 
   return { system, user };
 }
