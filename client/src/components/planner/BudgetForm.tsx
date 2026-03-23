@@ -24,7 +24,7 @@ export default function BudgetForm({ onSubmit, isLoading }: BudgetFormProps) {
   const [familySize, setFamilySize] = useState(DEFAULT_FAMILY_SIZE);
   const [meals, setMeals] = useState<string[]>(['breakfast', 'lunch', 'dinner']);
   const [dietary, setDietary] = useState<string[]>([]);
-  const [region, setRegion] = useState(REGIONS[0].id);
+  const [region, setRegion] = useState<string>(REGIONS[0].id);
   const [feasibility, setFeasibility] = useState<FeasibilityResponse | null>(
     null
   );

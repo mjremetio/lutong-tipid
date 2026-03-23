@@ -20,11 +20,9 @@ export default function PlannerPage() {
   // Meal plan hook
   const {
     mealPlan,
-    isGenerating,
     error,
     generatePlan,
     swapMeal,
-    isSwapping,
     clearPlan,
   } = useMealPlan();
 
@@ -37,13 +35,7 @@ export default function PlannerPage() {
   const [isRecipeLoading, setIsRecipeLoading] = useState(false);
   const [isRecipeOpen, setIsRecipeOpen] = useState(false);
 
-  // Swap state
-  const [swapTarget, setSwapTarget] = useState<{
-    day: string;
-    mealType: string;
-    meal: Meal;
-  } | null>(null);
-  const [newSwapSuggestion, setNewSwapSuggestion] = useState<Meal | null>(null);
+  // Swap state (kept for future swap modal UI)
 
   // Error toast
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -70,13 +62,7 @@ export default function PlannerPage() {
   // ── Swap meal ──
   const handleSwapMeal = useCallback(
     async (day: string, mealType: string, meal: Meal) => {
-      setSwapTarget({ day, mealType, meal });
-      setNewSwapSuggestion(null);
-
-      const newMeal = await swapMeal(day, mealType, meal);
-      if (newMeal) {
-        setNewSwapSuggestion(newMeal);
-      }
+      await swapMeal(day, mealType, meal);
     },
     [swapMeal]
   );
