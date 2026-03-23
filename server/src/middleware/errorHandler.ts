@@ -45,10 +45,8 @@ export function errorHandler(
     500: "Something went wrong on our end. Please try again later.",
   };
 
-  // In production, never expose internal error details or stack traces
-  const message = isProduction
-    ? friendlyMessages[statusCode] ?? "An unexpected error occurred."
-    : err.message || friendlyMessages[statusCode] || "An unexpected error occurred.";
+  // Show actual error message (safe — no stack traces exposed)
+  const message = err.message || friendlyMessages[statusCode] || "An unexpected error occurred.";
 
   res.status(statusCode).json({
     error: friendlyMessages[statusCode] ?? "Error",
