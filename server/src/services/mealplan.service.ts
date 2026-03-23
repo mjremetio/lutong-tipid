@@ -20,6 +20,10 @@ function correctIngredientCost(
   ingredient: { name: string; quantity: string; estimated_cost: number },
   _familySize: number
 ): number {
+  // Free items
+  const freeItems = ["water", "tubig", "ice", "yelo"];
+  if (freeItems.some(f => ingredient.name.toLowerCase().includes(f))) return 0;
+
   const aiCost = ingredient.estimated_cost || 0;
   const MAX_INGREDIENT_COST = 150;
 

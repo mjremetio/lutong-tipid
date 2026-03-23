@@ -191,10 +191,29 @@ export function estimateIngredientCost(
   }
 
   // --- Bundle/pack/can/bottle items ---
-  // These are sold as whole units. "1 pack", "2 cans", etc.
+
+  // Handle small measurements (tablespoon, teaspoon, dash, pinch)
+  // These are tiny fractions of the whole container
+  if (/tbsp|tablespoon|kutsara/i.test(qty)) {
+    // 1 tbsp ≈ 15ml. A bottle is ~350-1000ml. Estimate ~1/30 of bottle per tbsp.
+    return rnd(Math.max(2, num * ppu / 30));
+  }
+  if (/tsp|teaspoon/i.test(qty)) {
+    // 1 tsp ≈ 5ml → ~1/100 of bottle
+    return rnd(Math.max(1, num * ppu / 100));
+  }
+  if (/dash|pinch|konti|kaunti|to taste/i.test(qty)) {
+    return rnd(Math.max(1, ppu / 50));
+  }
+
+  // Handle cup measurements for liquid condiments/oils
+  if (/cup/i.test(qty)) {
+    // 1 cup ≈ 240ml. Bottle is ~350-1000ml. Estimate ~1/3 of bottle per cup.
+    return rnd(num * ppu / 3);
+  }
+
   // If num is large (e.g., "250g" of a pack-based item), assume it's 1 unit
   if (num > 10) {
-    // Probably grams or ml — just 1 unit worth
     return rnd(ppu);
   }
   return rnd(num * ppu);
