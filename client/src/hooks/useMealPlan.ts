@@ -29,8 +29,10 @@ export default function useMealPlan(): UseMealPlanReturn {
       const message =
         err instanceof Error
           ? err.message
+          : typeof err === 'string'
+          ? err
           : 'Something went wrong while generating your meal plan. Please try again.';
-      setError(message);
+      setError(String(message));
     } finally {
       setIsGenerating(false);
     }

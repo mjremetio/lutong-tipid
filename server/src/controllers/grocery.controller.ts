@@ -1,9 +1,9 @@
 import { Request, Response, NextFunction } from "express";
 import { eq } from "drizzle-orm";
-import { db } from "../db";
-import { mealPlans } from "../db/schema";
-import { getGroceryList } from "../services/grocery.service";
-import type { MealPlanResponse } from "../types";
+import { db } from "../db/index.js";
+import { mealPlans } from "../db/schema.js";
+import { getGroceryList } from "../services/grocery.service.js";
+import type { MealPlanResponse } from "../types/index.js";
 
 export async function handleGetGroceryList(
   req: Request,

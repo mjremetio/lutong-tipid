@@ -1,8 +1,8 @@
 import { Router } from "express";
-import { handleValidate, handleGenerate, handleSwap } from "../controllers/mealplan.controller";
-import { validateRequest } from "../middleware/validateRequest";
-import { generateLimiter, swapLimiter } from "../middleware/rateLimiter";
-import { GenerateRequestSchema, SwapRequestSchema } from "../services/ai/schemas";
+import { handleValidate, handleGenerate, handleSwap } from "../controllers/mealplan.controller.js";
+import { validateRequest } from "../middleware/validateRequest.js";
+import { generateLimiter, swapLimiter } from "../middleware/rateLimiter.js";
+import { GenerateRequestSchema, SwapRequestSchema } from "../services/ai/schemas.js";
 
 const router = Router();
 

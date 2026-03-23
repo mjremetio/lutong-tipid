@@ -1,4 +1,4 @@
-import type { FeasibilityResponse } from "../types";
+import type { FeasibilityResponse } from "../types/index.js";
 
 interface FeasibilityParams {
   weekly_budget: number;

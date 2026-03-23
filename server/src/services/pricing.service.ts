@@ -1,5 +1,5 @@
-import { INGREDIENT_PRICES, type IngredientPrice } from "../data/ingredients";
-import type { Ingredient } from "../types";
+import { INGREDIENT_PRICES, type IngredientPrice } from "../data/ingredients.js";
+import type { Ingredient } from "../types/index.js";
 
 export function lookupPrice(ingredientName: string): IngredientPrice | null {
   const searchName = ingredientName.toLowerCase().trim();

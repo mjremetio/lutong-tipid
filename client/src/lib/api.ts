@@ -19,8 +19,17 @@ const api = axios.create({
 function extractErrorMessage(error: unknown): string {
   if (error instanceof AxiosError) {
     const data = error.response?.data;
-    if (data && typeof data === 'object' && 'error' in data) {
-      return String(data.error);
+    if (data && typeof data === 'object') {
+      // Try common error response shapes
+      if ('message' in data && typeof data.message === 'string') {
+        return data.message;
+      }
+      if ('error' in data && typeof data.error === 'string') {
+        return data.error;
+      }
+    }
+    if (typeof data === 'string' && data.length > 0 && data.length < 200) {
+      return data;
     }
     if (error.code === 'ECONNABORTED') {
       return 'Request timed out. The server may be busy — please try again.';
@@ -32,6 +41,9 @@ function extractErrorMessage(error: unknown): string {
   }
   if (error instanceof Error) {
     return error.message;
+  }
+  if (typeof error === 'string') {
+    return error;
   }
   return 'An unexpected error occurred.';
 }

@@ -1,9 +1,9 @@
 import { Request, Response, NextFunction } from "express";
-import { generateChatCompletion } from "../services/ai/groq.service";
-import { SYSTEM_004_RECIPE } from "../services/ai/prompts";
-import { RecipeResponseSchema } from "../services/ai/schemas";
-import { withRetry } from "../services/ai/retry";
-import type { RecipeResponse } from "../types";
+import { generateChatCompletion } from "../services/ai/groq.service.js";
+import { SYSTEM_004_RECIPE } from "../services/ai/prompts.js";
+import { RecipeResponseSchema } from "../services/ai/schemas.js";
+import { withRetry } from "../services/ai/retry.js";
+import type { RecipeResponse } from "../types/index.js";
 
 export async function handleGetRecipe(
   req: Request,

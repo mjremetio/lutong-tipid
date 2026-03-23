@@ -2,14 +2,14 @@ import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
-import { env } from "./config/env";
-import { corsOptions } from "./config/cors";
-import { errorHandler } from "./middleware/errorHandler";
-import { securityHeaders } from "./middleware/securityHeaders";
-import mealplanRoutes from "./routes/mealplan.routes";
-import groceryRoutes from "./routes/grocery.routes";
-import recipeRoutes from "./routes/recipe.routes";
-import healthRoutes from "./routes/health.routes";
+import { env } from "./config/env.js";
+import { corsOptions } from "./config/cors.js";
+import { errorHandler } from "./middleware/errorHandler.js";
+import { securityHeaders } from "./middleware/securityHeaders.js";
+import mealplanRoutes from "./routes/mealplan.routes.js";
+import groceryRoutes from "./routes/grocery.routes.js";
+import recipeRoutes from "./routes/recipe.routes.js";
+import healthRoutes from "./routes/health.routes.js";
 
 const app = express();
 

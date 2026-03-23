@@ -1,7 +1,7 @@
 import { drizzle } from "drizzle-orm/node-postgres";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
 import pg from "pg";
-import { env } from "../config/env";
+import { env } from "../config/env.js";
 
 async function runMigrations() {
   const pool = new pg.Pool({

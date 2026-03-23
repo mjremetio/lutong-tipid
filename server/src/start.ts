@@ -1,5 +1,5 @@
-import app from './index';
-import { env } from './config/env';
+import app from './index.js';
+import { env } from './config/env.js';
 
 app.listen(env.PORT, () => {
   console.log(`Lutong Tipid API server running on port ${env.PORT}`);

@@ -1,5 +1,5 @@
 import Groq from "groq-sdk";
-import { env } from "../../config/env";
+import { env } from "../../config/env.js";
 
 const PLACEHOLDER_VALUES = [
   "your-api-key-here",

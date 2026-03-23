@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
-import { generateMealPlan, swapMeal } from "../services/mealplan.service";
-import { validateBudgetFeasibility } from "../services/validation.service";
-import type { GenerateRequest, SwapRequest } from "../types";
+import { generateMealPlan, swapMeal } from "../services/mealplan.service.js";
+import { validateBudgetFeasibility } from "../services/validation.service.js";
+import type { GenerateRequest, SwapRequest } from "../types/index.js";
 
 export async function handleValidate(
   req: Request,

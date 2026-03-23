@@ -1,10 +1,10 @@
-import { db } from "../db";
-import { mealPlans } from "../db/schema";
-import { generateChatCompletion } from "./ai/groq.service";
-import { SYSTEM_001_MEAL_PLAN, SYSTEM_002_SWAP } from "./ai/prompts";
-import { MealPlanResponseSchema, SwapMealResponseSchema } from "./ai/schemas";
-import { withRetry } from "./ai/retry";
-import type { GenerateRequest, MealPlanResponse, SwapRequest, Meal } from "../types";
+import { db } from "../db/index.js";
+import { mealPlans } from "../db/schema.js";
+import { generateChatCompletion } from "./ai/groq.service.js";
+import { SYSTEM_001_MEAL_PLAN, SYSTEM_002_SWAP } from "./ai/prompts.js";
+import { MealPlanResponseSchema, SwapMealResponseSchema } from "./ai/schemas.js";
+import { withRetry } from "./ai/retry.js";
+import type { GenerateRequest, MealPlanResponse, SwapRequest, Meal } from "../types/index.js";
 
 /** Round to 2 decimal places */
 function r2(n: number): number {

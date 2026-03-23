@@ -1,4 +1,4 @@
-import { getIngredientPriceTable } from "../../data/ingredients";
+import { getIngredientPriceTable } from "../../data/ingredients.js";
 
 interface MealPlanPromptParams {
   weekly_budget: number;

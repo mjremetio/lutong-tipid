@@ -1,4 +1,4 @@
-import type { MealPlanResponse, GroceryCategory } from "../types";
+import type { MealPlanResponse, GroceryCategory } from "../types/index.js";
 
 interface ConsolidatedItem {
   name: string;
