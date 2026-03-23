@@ -29,14 +29,23 @@ function correctIngredientCost(
 
   const refCost = estimateIngredientCost(ingredient.name, ingredient.quantity, _familySize);
 
-  if (refCost !== null) {
-    // Always use reference price — AI costs are unreliable
-    // Ensure at least ₱1 for any real ingredient
-    return Math.max(1, Math.min(refCost, MAX_INGREDIENT_COST));
+  // Debug logging for zero-cost issues
+  if (ingredient.name.toLowerCase().includes('rice') || (refCost !== null && refCost === 0)) {
+    console.log(`[PRICE DEBUG] ${ingredient.name} (${ingredient.quantity}): aiCost=${aiCost}, refCost=${refCost}`);
   }
 
-  // Not in our database — cap AI's cost
-  return Math.max(2, Math.min(MAX_INGREDIENT_COST, aiCost));
+  if (refCost !== null && refCost > 0) {
+    // Always use reference price — AI costs are unreliable
+    return Math.min(refCost, MAX_INGREDIENT_COST);
+  }
+
+  // If we found the item but got 0 cost, use a reasonable minimum
+  if (refCost === 0) {
+    return Math.max(5, Math.min(MAX_INGREDIENT_COST, aiCost || 15));
+  }
+
+  // Not in our database — cap AI's cost, minimum ₱2
+  return Math.max(2, Math.min(MAX_INGREDIENT_COST, aiCost || 15));
 }
 
 /**
