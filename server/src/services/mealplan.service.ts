@@ -20,9 +20,10 @@ function correctIngredientCost(
   ingredient: { name: string; quantity: string; estimated_cost: number },
   _familySize: number
 ): number {
-  // Free items
-  const freeItems = ["water", "tubig", "ice", "yelo"];
-  if (freeItems.some(f => ingredient.name.toLowerCase().includes(f))) return 0;
+  // Free items — use word boundary matching to avoid false positives (e.g., "rice" contains "ice")
+  const nameLower = ingredient.name.toLowerCase();
+  if (/^water$|^tubig$|^yelo$|^ice$/i.test(nameLower.trim())) return 0;
+  if (/\bwater\b/.test(nameLower) && !nameLower.includes("kangkong") && !nameLower.includes("spinach")) return 0;
 
   const aiCost = ingredient.estimated_cost || 0;
   const MAX_INGREDIENT_COST = 150;
