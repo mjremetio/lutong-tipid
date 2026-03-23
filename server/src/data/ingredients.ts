@@ -100,6 +100,12 @@ export const INGREDIENT_PRICES: IngredientPrice[] = [
   { name: "Flour", unit: "kg", price_per_unit: 45, category: "Essentials", aliases: ["all-purpose flour", "harina"] },
   { name: "Cornstarch", unit: "pack (100g)", price_per_unit: 12, category: "Essentials", aliases: ["gawgaw"] },
   { name: "Butter", unit: "pack (100g)", price_per_unit: 35, category: "Essentials", aliases: ["margarine", "star margarine"] },
+
+  // Common AI-referenced items
+  { name: "Chicken Broth", unit: "cube", price_per_unit: 5, category: "Essentials", aliases: ["chicken stock", "broth", "knorr cube", "magic sarap"] },
+  { name: "Jam", unit: "bottle (250g)", price_per_unit: 45, category: "Essentials", aliases: ["strawberry jam", "palaman"] },
+  { name: "Tuyo", unit: "pack (100g)", price_per_unit: 25, category: "Meat & Seafood", aliases: ["dried fish", "dried herring"] },
+  { name: "Tinapa", unit: "piece", price_per_unit: 20, category: "Meat & Seafood", aliases: ["smoked fish"] },
 ];
 
 /**
@@ -174,9 +180,9 @@ export function estimateIngredientCost(
     if (/pcs?|pieces?|piraso/.test(qty)) {
       return rnd(num * 0.2 * ppu);
     }
-    // "cloves", "thumb" (for garlic, ginger) — tiny amounts
-    if (/cloves?|thumb|knob/i.test(qty)) {
-      return rnd(Math.max(5, num * 0.02 * ppu)); // ~20g per clove/thumb
+    // "cloves", "thumb", "slices" (for garlic, ginger) — tiny amounts
+    if (/cloves?|thumb|knob|slices?/i.test(qty)) {
+      return rnd(Math.max(2, num * 0.02 * ppu)); // ~20g per clove/thumb/slice
     }
     // Ambiguous (e.g., "1 Chicken", "2 Bangus") — if num is small, treat as fraction of kg
     if (num <= 5) {
@@ -196,8 +202,15 @@ export function estimateIngredientCost(
   }
 
   // --- Piece-priced items (eggs at PHP 8/piece, sayote at PHP 20/piece) ---
-  if (item.unit.includes("piece") || item.unit.match(/\d+\s*pcs/)) {
+  if (item.unit.includes("piece")) {
     return rnd(num * ppu);
+  }
+  // Multi-piece packs like "10 pcs" pandesal at ₱30 → ₱3 each
+  const packPcsMatch = item.unit.match(/(\d+)\s*pcs/);
+  if (packPcsMatch) {
+    const pcsPerPack = parseInt(packPcsMatch[1], 10);
+    const pricePerPiece = ppu / pcsPerPack;
+    return rnd(num * pricePerPiece);
   }
 
   // --- Bundle/pack/can/bottle items ---
