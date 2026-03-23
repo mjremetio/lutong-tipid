@@ -130,13 +130,15 @@ export function findIngredientPrice(name: string): IngredientPrice | null {
 
 /**
  * Estimate a reasonable cost for an ingredient based on our price table.
- * Uses the quantity string and family size to calculate.
- * For a typical Filipino family meal, most ingredients cost PHP 10-80 each.
+ *
+ * Strategy: keep it simple. Most Filipino meal ingredients cost PHP 8-90 each.
+ * We figure out how many "units" (as defined in our price table) the quantity represents,
+ * then multiply by our known price.
  */
 export function estimateIngredientCost(
   name: string,
   quantity: string,
-  familySize: number
+  _familySize: number
 ): number | null {
   const item = findIngredientPrice(name);
   if (!item) return null;
@@ -144,52 +146,61 @@ export function estimateIngredientCost(
   const qty = quantity.toLowerCase().trim();
   const ppu = item.price_per_unit;
 
-  // Extract the leading number from quantity (e.g., "2 cups" → 2, "500g" → 500, "1/2 kg" → 0.5)
-  let amount = 1;
+  // Extract the leading number
+  let num = 1;
   const fracMatch = qty.match(/^(\d+)\/(\d+)/);
   const numMatch = qty.match(/^([\d.]+)/);
   if (fracMatch) {
-    amount = parseInt(fracMatch[1], 10) / parseInt(fracMatch[2], 10);
+    num = parseInt(fracMatch[1], 10) / parseInt(fracMatch[2], 10);
   } else if (numMatch) {
-    amount = parseFloat(numMatch[1]) || 1;
+    num = parseFloat(numMatch[1]) || 1;
   }
 
-  // For kg-priced items, handle gram/kg conversions
+  // --- KG-based items (rice, meat, fish, vegetables) ---
   if (item.unit.includes("kg")) {
-    // "500g" or "500 g" → grams (but NOT "500kg")
-    if (/\d\s*g\b/.test(qty) && !qty.includes("kg")) {
-      const grams = amount; // the leading number IS grams
-      return r(grams / 1000 * ppu);
+    // Quantity in grams: "500g", "250 g", "300g" → convert to kg fraction
+    if (/g\b/.test(qty) && !qty.includes("kg")) {
+      return rnd(num / 1000 * ppu);
     }
-    // "1.5 kg" or "1 kg"
+    // Quantity in kg: "1 kg", "0.5kg", "1.5 kg"
     if (qty.includes("kg")) {
-      return r(amount * ppu);
+      return rnd(num * ppu);
     }
-    // "2 cups rice" → roughly 400g per cup, estimate fraction of kg
+    // Cups (for rice mainly): ~200g per cup
     if (qty.includes("cup")) {
-      return r(amount * 0.2 * ppu); // ~200g per cup
+      return rnd(num * 0.2 * ppu);
     }
-    // No unit specified — assume a typical portion for this family size
-    // For meat/fish: ~250g per person, for veggies: ~100g per person
-    const isProtein = item.category === "Meat & Seafood";
-    const portionKg = isProtein ? 0.25 : 0.15;
-    // If amount > 5, it's probably grams not units
-    if (amount > 5) {
-      return r(amount / 1000 * ppu);
+    // "2 pieces" of a kg item (like 2 eggplants) — estimate ~200g each
+    if (/pcs?|pieces?|piraso/.test(qty)) {
+      return rnd(num * 0.2 * ppu);
     }
-    return r(amount * ppu);
+    // Ambiguous (e.g., "1 Chicken", "2 Bangus") — if num is small, treat as fraction of kg
+    if (num <= 5) {
+      // Assume the AI means a reasonable portion, roughly 0.5kg per unit for protein, 0.3kg for veggies
+      const isProtein = item.category === "Meat & Seafood";
+      const kgPerUnit = isProtein ? 0.5 : 0.3;
+      return rnd(num * kgPerUnit * ppu);
+    }
+    // Large number without unit — probably grams
+    return rnd(num / 1000 * ppu);
   }
 
-  // For piece-priced items (eggs, sayote, etc.)
-  if (item.unit.includes("piece") || item.unit.includes("pcs")) {
-    return r(amount * ppu);
+  // --- Piece-priced items (eggs at PHP 8/piece, sayote at PHP 20/piece) ---
+  if (item.unit.includes("piece") || item.unit.match(/\d+\s*pcs/)) {
+    return rnd(num * ppu);
   }
 
-  // For bundle/pack/can/bottle items — amount × price
-  return r(amount * ppu);
+  // --- Bundle/pack/can/bottle items ---
+  // These are sold as whole units. "1 pack", "2 cans", etc.
+  // If num is large (e.g., "250g" of a pack-based item), assume it's 1 unit
+  if (num > 10) {
+    // Probably grams or ml — just 1 unit worth
+    return rnd(ppu);
+  }
+  return rnd(num * ppu);
 }
 
-function r(n: number): number {
+function rnd(n: number): number {
   return Math.round(n * 100) / 100;
 }
 
