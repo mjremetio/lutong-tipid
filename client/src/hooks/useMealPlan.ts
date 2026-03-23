@@ -50,7 +50,7 @@ export default function useMealPlan(): UseMealPlanReturn {
           meal_type: mealType,
         });
 
-        // Update the specific meal in the plan state
+        // Update the specific meal and recalculate all costs bottom-up
         setMealPlan((prev) => {
           if (!prev) return prev;
 
@@ -61,6 +61,7 @@ export default function useMealPlan(): UseMealPlanReturn {
               m.meal_type === mealType ? newMeal : m
             );
 
+            // Recalculate daily cost from meal costs
             const newDailyCost = Math.round(
               updatedMeals.reduce((sum, m) => sum + m.estimated_cost, 0) * 100
             ) / 100;
@@ -68,17 +69,25 @@ export default function useMealPlan(): UseMealPlanReturn {
             return { ...d, meals: updatedMeals, daily_cost: newDailyCost };
           });
 
+          // Recalculate total from daily costs
           const newTotalCost = Math.round(
             updatedDays.reduce((sum, d) => sum + d.daily_cost, 0) * 100
+          ) / 100;
+
+          const weeklyBudget = prev.budget_summary.weekly_budget;
+          const familySize = prev.family_size || 1;
+          const costPerPersonPerDay = Math.round(
+            (newTotalCost / (familySize * 7)) * 100
           ) / 100;
 
           return {
             ...prev,
             days: updatedDays,
             budget_summary: {
-              ...prev.budget_summary,
+              weekly_budget: weeklyBudget,
               total_estimated_cost: newTotalCost,
-              remaining_budget: prev.budget_summary.weekly_budget - newTotalCost,
+              remaining_budget: Math.round((weeklyBudget - newTotalCost) * 100) / 100,
+              cost_per_person_per_day: costPerPersonPerDay,
             },
           };
         });

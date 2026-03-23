@@ -30,43 +30,43 @@ export function validateBudgetFeasibility(params: FeasibilityParams): Feasibilit
   if (budgetPerPersonPerMeal < 15) {
     level = "unrealistic";
     feasible = false;
-    message = `Sa PHP ${budgetPerPersonPerMeal.toFixed(2)} per person per meal, napakahirap gumawa ng nutritious meal plan. Kailangan ng mas malaking budget.`;
+    message = `Sa PHP ${budgetPerPersonPerMeal.toFixed(2)} per tao per kain, napakahirap gumawa ng nutritious meal plan. Kailangan ng mas malaking budget, mare.`;
     suggestions.push(
-      "Increase the weekly budget if possible.",
-      "Reduce the number of meals per day (e.g., skip merienda).",
-      "Consider reducing family size portions.",
-      "Focus on the most affordable staples: rice, monggo, tuyo, kangkong."
+      "Dagdagan ang weekly budget kung kaya.",
+      "Bawasan ang meals per day — pwedeng skip muna ang merienda.",
+      "Focus sa pinakamurang ulam: Lugaw, Ginisang Monggo, Tortang Talong, Tuyo at Kamatis.",
+      "Bumili ng gulay sa palengke, mas mura kaysa supermarket."
     );
   } else if (budgetPerPersonPerMeal < 25) {
     level = "tight";
     feasible = true;
-    message = `Sa PHP ${budgetPerPersonPerMeal.toFixed(2)} per person per meal, kaya pero medyo mahirap. Kailangan ng maingat na pagpili ng ingredients.`;
+    message = `Sa PHP ${budgetPerPersonPerMeal.toFixed(2)} per tao per kain, kaya naman pero kailangan ng maingat na pagpili ng ingredients.`;
     suggestions.push(
-      "Prioritize egg-based and monggo dishes for affordable protein.",
-      "Buy vegetables from wet markets for lower prices.",
-      "Use tinapa/tuyo as affordable ulam options.",
-      "Cook in bulk to reduce per-meal costs.",
-      "Avoid processed/canned goods when fresh alternatives are cheaper."
+      "Unahin ang egg dishes at monggo para sa murang protein — Tortang Talong, Ginisang Monggo, Sardinas Guisado.",
+      "Bumili ng gulay sa wet market, mas mura ng 20-30% kaysa grocery.",
+      "Gamitin ang Tuyo, Tinapa, at Dilis bilang araw-araw na ulam.",
+      "Magluto ng marami para sa buong araw — mas tipid sa gas at oras.",
+      "Iwasan ang processed food kung may fresh alternative — mas mura ang sariwang gulay."
     );
   } else if (budgetPerPersonPerMeal < 50) {
     level = "moderate";
     feasible = true;
-    message = `Sa PHP ${budgetPerPersonPerMeal.toFixed(2)} per person per meal, comfortable ang budget. May room para sa variety.`;
+    message = `Sa PHP ${budgetPerPersonPerMeal.toFixed(2)} per tao per kain, okay ang budget! May room para sa variety ng ulam.`;
     suggestions.push(
-      "You can include chicken and pork dishes 2-3 times per week.",
-      "Mix affordable and moderate ingredients for variety.",
-      "Consider buying in bulk for additional savings.",
-      "Include fresh fruits as snacks or desserts."
+      "Pwede mag-include ng Adobong Manok, Sinigang na Baboy, Tinolang Manok 2-3x a week.",
+      "I-mix ang murang ulam (Monggo, Sardinas) sa mas masarap (Pancit, Afritada) para balanced.",
+      "Bumili ng bulk sa palengke — bigas, bawang, sibuyas mas tipid kapag marami.",
+      "Lagyan ng prutas bilang merienda o dessert — saging, papaya, watermelon."
     );
   } else {
     level = "comfortable";
     feasible = true;
-    message = `Sa PHP ${budgetPerPersonPerMeal.toFixed(2)} per person per meal, maluwag ang budget. Pwede mag-include ng mas maraming variety at premium ingredients.`;
+    message = `Sa PHP ${budgetPerPersonPerMeal.toFixed(2)} per tao per kain, maluwag ang budget! Pwede mag-enjoy ng masasarap na ulam.`;
     suggestions.push(
-      "You can include fish and meat in most meals.",
-      "Room for specialty ingredients and varied dishes.",
-      "Consider saving the surplus for emergencies.",
-      "Great opportunity to include more nutritious options."
+      "Pwede mag-include ng isda at karne sa halos lahat ng meals — Bistek, Kare-Kare, Lechon Kawali.",
+      "May room para sa specialty dishes tulad ng Crispy Pata, Inihaw na Liempo.",
+      "I-save ang natitira para sa emergency fund o extra groceries.",
+      "Mag-include ng mas maraming nutritious options — fresh fish, lean meat, maraming gulay."
     );
   }
 
