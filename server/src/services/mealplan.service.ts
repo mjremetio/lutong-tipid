@@ -68,8 +68,6 @@ function recalculatePlanCosts(plan: MealPlanResponse): MealPlanResponse {
   // Total cost = sum of daily costs
   const totalCost = r2(days.reduce((sum, d) => sum + d.daily_cost, 0));
   const weeklyBudget = plan.weekly_budget;
-  const familySize = plan.family_size;
-  const totalMeals = days.reduce((sum, d) => sum + d.meals.length, 0);
   const costPerPersonPerDay = familySize > 0
     ? r2(totalCost / (familySize * 7))
     : 0;
