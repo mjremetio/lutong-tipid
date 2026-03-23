@@ -174,11 +174,21 @@ export function estimateIngredientCost(
     if (/pcs?|pieces?|piraso/.test(qty)) {
       return rnd(num * 0.2 * ppu);
     }
+    // "cloves", "thumb" (for garlic, ginger) — tiny amounts
+    if (/cloves?|thumb|knob/i.test(qty)) {
+      return rnd(Math.max(5, num * 0.02 * ppu)); // ~20g per clove/thumb
+    }
     // Ambiguous (e.g., "1 Chicken", "2 Bangus") — if num is small, treat as fraction of kg
     if (num <= 5) {
-      // Assume the AI means a reasonable portion, roughly 0.5kg per unit for protein, 0.3kg for veggies
+      // For condiment-type veggies (garlic, onion, ginger), use smaller portions
+      const isCondiment = ["bawang", "garlic", "luya", "ginger", "sibuyas", "onion"].some(
+        c => item.name.toLowerCase().includes(c) || (item.aliases?.some(a => a.toLowerCase().includes(c)) ?? false)
+      );
+      if (isCondiment) {
+        return rnd(num * 0.05 * ppu); // ~50g per "unit" of condiment
+      }
       const isProtein = item.category === "Meat & Seafood";
-      const kgPerUnit = isProtein ? 0.5 : 0.3;
+      const kgPerUnit = isProtein ? 0.5 : 0.25;
       return rnd(num * kgPerUnit * ppu);
     }
     // Large number without unit — probably grams
