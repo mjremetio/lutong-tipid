@@ -31,7 +31,8 @@ function correctIngredientCost(
 
   if (refCost !== null) {
     // Always use reference price — AI costs are unreliable
-    return Math.min(refCost, MAX_INGREDIENT_COST);
+    // Ensure at least ₱1 for any real ingredient
+    return Math.max(1, Math.min(refCost, MAX_INGREDIENT_COST));
   }
 
   // Not in our database — cap AI's cost
