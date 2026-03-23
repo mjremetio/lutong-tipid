@@ -21,21 +21,24 @@ function correctIngredientCost(
   familySize: number
 ): number {
   const aiCost = ingredient.estimated_cost || 0;
+
+  // Hard cap: no single ingredient should cost more than PHP 300 for a family meal
+  const MAX_INGREDIENT_COST = 300;
+
   const refCost = estimateIngredientCost(ingredient.name, ingredient.quantity, familySize);
 
   if (refCost === null) {
-    // Not in our database — keep AI's cost but ensure it's reasonable
-    // Cap single ingredient at PHP 200 and minimum at PHP 2
-    return Math.max(2, Math.min(200, aiCost));
+    // Not in our database — keep AI's cost but cap it
+    return Math.max(2, Math.min(MAX_INGREDIENT_COST, aiCost));
   }
 
-  // If AI cost is within 2x of reference, keep AI's (it may account for quantity nuance)
-  if (aiCost > 0 && aiCost >= refCost * 0.5 && aiCost <= refCost * 2) {
+  // If AI cost is within 2x of reference AND under the cap, keep AI's
+  if (aiCost > 0 && aiCost >= refCost * 0.5 && aiCost <= refCost * 2 && aiCost <= MAX_INGREDIENT_COST) {
     return aiCost;
   }
 
-  // Otherwise use our reference price
-  return refCost;
+  // Otherwise use our reference price (also capped)
+  return Math.min(refCost, MAX_INGREDIENT_COST);
 }
 
 /**
