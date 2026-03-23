@@ -129,8 +129,9 @@ export function findIngredientPrice(name: string): IngredientPrice | null {
 }
 
 /**
- * Estimate cost for an ingredient based on our price table and the quantity string.
- * Returns null if we can't determine a reasonable estimate.
+ * Estimate a reasonable cost for an ingredient based on our price table.
+ * Uses the quantity string and family size to calculate.
+ * For a typical Filipino family meal, most ingredients cost PHP 10-80 each.
  */
 export function estimateIngredientCost(
   name: string,
@@ -141,56 +142,55 @@ export function estimateIngredientCost(
   if (!item) return null;
 
   const qty = quantity.toLowerCase().trim();
-  const pricePerUnit = item.price_per_unit;
+  const ppu = item.price_per_unit;
 
-  // Try to extract a numeric amount
-  const numMatch = qty.match(/^([\d.\/]+)\s*/);
+  // Extract the leading number from quantity (e.g., "2 cups" → 2, "500g" → 500, "1/2 kg" → 0.5)
   let amount = 1;
-  if (numMatch) {
-    const raw = numMatch[1];
-    if (raw.includes("/")) {
-      const [num, den] = raw.split("/").map(Number);
-      amount = den ? num / den : 1;
-    } else {
-      amount = parseFloat(raw) || 1;
-    }
+  const fracMatch = qty.match(/^(\d+)\/(\d+)/);
+  const numMatch = qty.match(/^([\d.]+)/);
+  if (fracMatch) {
+    amount = parseInt(fracMatch[1], 10) / parseInt(fracMatch[2], 10);
+  } else if (numMatch) {
+    amount = parseFloat(numMatch[1]) || 1;
   }
 
-  // Convert grams to kg if the unit is kg-based
+  // For kg-priced items, handle gram/kg conversions
   if (item.unit.includes("kg")) {
-    if (qty.includes("g") && !qty.includes("kg")) {
-      // "500g" → 0.5 kg
-      const grams = parseFloat(qty.replace(/[^\d.]/g, "")) || 0;
-      if (grams > 0) {
-        return Math.round((grams / 1000) * pricePerUnit * 100) / 100;
-      }
+    // "500g" or "500 g" → grams (but NOT "500kg")
+    if (/\d\s*g\b/.test(qty) && !qty.includes("kg")) {
+      const grams = amount; // the leading number IS grams
+      return r(grams / 1000 * ppu);
     }
+    // "1.5 kg" or "1 kg"
     if (qty.includes("kg")) {
-      return Math.round(amount * pricePerUnit * 100) / 100;
+      return r(amount * ppu);
     }
+    // "2 cups rice" → roughly 400g per cup, estimate fraction of kg
+    if (qty.includes("cup")) {
+      return r(amount * 0.2 * ppu); // ~200g per cup
+    }
+    // No unit specified — assume a typical portion for this family size
+    // For meat/fish: ~250g per person, for veggies: ~100g per person
+    const isProtein = item.category === "Meat & Seafood";
+    const portionKg = isProtein ? 0.25 : 0.15;
+    // If amount > 5, it's probably grams not units
+    if (amount > 5) {
+      return r(amount / 1000 * ppu);
+    }
+    return r(amount * ppu);
   }
 
-  // Handle piece-based items (eggs, sayote, etc.)
+  // For piece-priced items (eggs, sayote, etc.)
   if (item.unit.includes("piece") || item.unit.includes("pcs")) {
-    if (qty.match(/(\d+)\s*(pcs?|pieces?|piraso)/i)) {
-      const pcs = parseInt(qty.match(/(\d+)/)?.[1] || "1", 10);
-      return Math.round(pcs * pricePerUnit * 100) / 100;
-    }
-    return Math.round(amount * pricePerUnit * 100) / 100;
+    return r(amount * ppu);
   }
 
-  // Handle bundle-based items
-  if (item.unit.includes("bundle")) {
-    return Math.round(amount * pricePerUnit * 100) / 100;
-  }
+  // For bundle/pack/can/bottle items — amount × price
+  return r(amount * ppu);
+}
 
-  // Handle pack/can based items
-  if (item.unit.includes("pack") || item.unit.includes("can") || item.unit.includes("bottle")) {
-    return Math.round(amount * pricePerUnit * 100) / 100;
-  }
-
-  // Default: multiply amount by unit price
-  return Math.round(amount * pricePerUnit * 100) / 100;
+function r(n: number): number {
+  return Math.round(n * 100) / 100;
 }
 
 export function getIngredientPriceTable(): string {
