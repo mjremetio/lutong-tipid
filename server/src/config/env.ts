@@ -25,7 +25,7 @@ export const env: EnvConfig = {
   DATABASE_URL: getEnvVar("DATABASE_URL", ""),
   GEMINI_API_KEY: getEnvVar("GEMINI_API_KEY"),
   GEMINI_MODEL: getEnvVar("GEMINI_MODEL", "gemini-2.0-flash"),
-  GEMINI_FALLBACK_MODEL: getEnvVar("GEMINI_FALLBACK_MODEL", "gemini-1.5-flash"),
+  GEMINI_FALLBACK_MODEL: getEnvVar("GEMINI_FALLBACK_MODEL", "gemini-2.0-flash-lite"),
   CLIENT_URL: getEnvVar("CLIENT_URL", "http://localhost:5173"),
   NODE_ENV: getEnvVar("NODE_ENV", "development"),
 };
