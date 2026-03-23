@@ -9,26 +9,24 @@ router.get("/", (_req, res) => {
     status: "ok",
     service: "Lutong Tipid API",
     timestamp: new Date().toISOString(),
+    providers: {
+      gemini: env.GEMINI_API_KEY ? "configured" : "not set",
+      groq: env.GROQ_API_KEY ? "configured" : "not set",
+    },
   });
 });
 
 router.get("/ai-test", async (_req, res) => {
   try {
-    const hasKey = !!env.GEMINI_API_KEY && env.GEMINI_API_KEY.length > 5;
-    if (!hasKey) {
-      res.json({ status: "error", message: "GEMINI_API_KEY not set or too short", keyLength: env.GEMINI_API_KEY?.length ?? 0 });
-      return;
-    }
-
     const result = await generateChatCompletion(
       "You are a helpful assistant. Respond with valid JSON only.",
-      'Say hello in JSON format: {"message": "hello"}',
-      { temperature: 0, maxTokens: 50 }
+      'Say hello in JSON format: {"message": "hello", "provider": "name of model you are"}',
+      { temperature: 0, maxTokens: 100 }
     );
-    res.json({ status: "ok", model: env.GEMINI_MODEL, response: result });
+    res.json({ status: "ok", response: result });
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
-    res.json({ status: "error", message: msg, model: env.GEMINI_MODEL });
+    res.json({ status: "error", message: msg });
   }
 });
 

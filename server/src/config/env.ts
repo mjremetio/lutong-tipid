@@ -5,9 +5,13 @@ dotenv.config();
 interface EnvConfig {
   PORT: number;
   DATABASE_URL: string;
+  // Gemini (primary)
   GEMINI_API_KEY: string;
   GEMINI_MODEL: string;
-  GEMINI_FALLBACK_MODEL: string;
+  // Groq (fallback)
+  GROQ_API_KEY: string;
+  GROQ_MODEL: string;
+  // General
   CLIENT_URL: string;
   NODE_ENV: string;
 }
@@ -23,9 +27,10 @@ function getEnvVar(key: string, defaultValue?: string): string {
 export const env: EnvConfig = {
   PORT: parseInt(getEnvVar("PORT", "3001"), 10),
   DATABASE_URL: getEnvVar("DATABASE_URL", ""),
-  GEMINI_API_KEY: getEnvVar("GEMINI_API_KEY"),
+  GEMINI_API_KEY: getEnvVar("GEMINI_API_KEY", ""),
   GEMINI_MODEL: getEnvVar("GEMINI_MODEL", "gemini-2.0-flash"),
-  GEMINI_FALLBACK_MODEL: getEnvVar("GEMINI_FALLBACK_MODEL", "gemini-2.0-flash-lite"),
+  GROQ_API_KEY: getEnvVar("GROQ_API_KEY", ""),
+  GROQ_MODEL: getEnvVar("GROQ_MODEL", "llama-3.3-70b-versatile"),
   CLIENT_URL: getEnvVar("CLIENT_URL", "http://localhost:5173"),
   NODE_ENV: getEnvVar("NODE_ENV", "development"),
 };

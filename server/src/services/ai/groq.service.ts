@@ -1,45 +1,84 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import Groq from "groq-sdk";
 import { env } from "../../config/env.js";
 
-const PLACEHOLDER_VALUES = [
-  "your-api-key-here",
-  "your_api_key_here",
-  "xxx",
-  "placeholder",
-  "changeme",
-];
-
+// --- Lazy clients ---
 let _genAI: GoogleGenerativeAI | null = null;
+let _groq: Groq | null = null;
 
-function getGeminiClient(): GoogleGenerativeAI {
+function getGeminiClient(): GoogleGenerativeAI | null {
   if (_genAI) return _genAI;
-
-  if (
-    !env.GEMINI_API_KEY ||
-    PLACEHOLDER_VALUES.includes(env.GEMINI_API_KEY.toLowerCase())
-  ) {
-    throw new Error(
-      "GEMINI_API_KEY is missing or set to a placeholder value. Please set a valid API key in your environment."
-    );
-  }
-
+  if (!env.GEMINI_API_KEY || env.GEMINI_API_KEY.length < 10) return null;
   _genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY);
   return _genAI;
 }
 
+function getGroqClient(): Groq | null {
+  if (_groq) return _groq;
+  if (!env.GROQ_API_KEY || env.GROQ_API_KEY.length < 10) return null;
+  _groq = new Groq({ apiKey: env.GROQ_API_KEY });
+  return _groq;
+}
+
+// --- Provider functions ---
+
+async function callGemini(
+  systemPrompt: string,
+  userMessage: string,
+  temperature: number,
+  maxTokens: number
+): Promise<string> {
+  const genAI = getGeminiClient();
+  if (!genAI) throw new Error("GEMINI_API_KEY not configured");
+
+  console.log(`Trying Gemini: ${env.GEMINI_MODEL}`);
+  const model = genAI.getGenerativeModel({
+    model: env.GEMINI_MODEL,
+    generationConfig: {
+      temperature,
+      maxOutputTokens: maxTokens,
+      responseMimeType: "application/json",
+    },
+    systemInstruction: systemPrompt,
+  });
+
+  const result = await model.generateContent(userMessage);
+  const content = result.response.text();
+  if (!content) throw new Error("No response from Gemini");
+  return content;
+}
+
+async function callGroq(
+  systemPrompt: string,
+  userMessage: string,
+  temperature: number,
+  maxTokens: number
+): Promise<string> {
+  const groq = getGroqClient();
+  if (!groq) throw new Error("GROQ_API_KEY not configured");
+
+  console.log(`Trying Groq: ${env.GROQ_MODEL}`);
+  const response = await groq.chat.completions.create({
+    model: env.GROQ_MODEL,
+    messages: [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: userMessage },
+    ],
+    response_format: { type: "json_object" },
+    temperature,
+    max_tokens: maxTokens,
+  });
+
+  const content = response.choices[0]?.message?.content;
+  if (!content) throw new Error("No response from Groq");
+  return content;
+}
+
+// --- Public API ---
+
 interface CompletionOptions {
   temperature?: number;
   maxTokens?: number;
-}
-
-function isRateLimitError(error: unknown): boolean {
-  if (error && typeof error === "object") {
-    const err = error as Record<string, unknown>;
-    if (err.status === 429 || err.statusCode === 429) return true;
-    if (typeof err.message === "string" && /rate.limit|quota|resource.*exhausted/i.test(err.message))
-      return true;
-  }
-  return false;
 }
 
 export async function generateChatCompletion(
@@ -47,50 +86,47 @@ export async function generateChatCompletion(
   userMessage: string,
   options: CompletionOptions = {}
 ): Promise<string> {
-  const genAI = getGeminiClient();
   const { temperature = 0.7, maxTokens = 8192 } = options;
 
-  const models = [env.GEMINI_MODEL, env.GEMINI_FALLBACK_MODEL].filter(
-    (m, i, arr) => m && arr.indexOf(m) === i
-  );
+  // Build provider list based on available keys
+  const providers: Array<{ name: string; fn: () => Promise<string> }> = [];
+
+  if (env.GEMINI_API_KEY && env.GEMINI_API_KEY.length >= 10) {
+    providers.push({
+      name: "Gemini",
+      fn: () => callGemini(systemPrompt, userMessage, temperature, maxTokens),
+    });
+  }
+
+  if (env.GROQ_API_KEY && env.GROQ_API_KEY.length >= 10) {
+    providers.push({
+      name: "Groq",
+      fn: () => callGroq(systemPrompt, userMessage, temperature, maxTokens),
+    });
+  }
+
+  if (providers.length === 0) {
+    throw new Error(
+      "No AI provider configured. Set GEMINI_API_KEY or GROQ_API_KEY in your environment."
+    );
+  }
 
   let lastError: unknown = null;
 
-  for (const modelName of models) {
+  for (const provider of providers) {
     try {
-      console.log(`Trying Gemini model: ${modelName}`);
-
-      const model = genAI.getGenerativeModel({
-        model: modelName,
-        generationConfig: {
-          temperature,
-          maxOutputTokens: maxTokens,
-          responseMimeType: "application/json",
-        },
-        systemInstruction: systemPrompt,
-      });
-
-      const result = await model.generateContent(userMessage);
-      const response = result.response;
-      const content = response.text();
-
-      if (!content) {
-        throw new Error("No response content received from Gemini");
-      }
-
+      const content = await provider.fn();
       return stripMarkdownFences(content);
     } catch (error) {
       lastError = error;
-      console.warn(
-        `Model ${modelName} failed: ${error instanceof Error ? error.message : String(error)}`
-      );
+      const msg = error instanceof Error ? error.message : String(error);
+      console.warn(`${provider.name} failed: ${msg}`);
 
-      // Only fallback on rate limit errors; other errors should propagate
-      if (!isRateLimitError(error) || models.indexOf(modelName) === models.length - 1) {
-        throw error;
+      // If there's another provider to try, continue
+      if (providers.indexOf(provider) < providers.length - 1) {
+        console.log(`Falling back to next provider...`);
+        continue;
       }
-
-      console.log(`Rate limited on ${modelName}, falling back to next model...`);
     }
   }
 
