@@ -3,8 +3,7 @@ function isRateLimitError(error: unknown): boolean {
   if (error && typeof error === "object") {
     const err = error as Record<string, unknown>;
     if (err.status === 429 || err.statusCode === 429) return true;
-    if (typeof err.message === "string" && err.message.includes("rate_limit")) return true;
-    if (typeof err.message === "string" && err.message.includes("Rate limit")) return true;
+    if (typeof err.message === "string" && /rate.limit|quota|resource.*exhausted/i.test(err.message)) return true;
   }
   return false;
 }
@@ -13,8 +12,8 @@ function isRateLimitError(error: unknown): boolean {
 function friendlyErrorMessage(error: unknown): string {
   const raw = error instanceof Error ? error.message : String(error);
 
-  // Rate limit
-  if (raw.includes("rate_limit") || raw.includes("Rate limit")) {
+  // Rate limit / quota
+  if (/rate.limit|quota|resource.*exhausted/i.test(raw)) {
     const retryMatch = raw.match(/try again in (\d+m[\d.]+s|\d+s)/i);
     const retryIn = retryMatch ? ` Subukan ulit sa ${retryMatch[1]}.` : " Subukan ulit mamaya.";
     return `Nag-hit na ng limit ang AI service natin ngayon.${retryIn} Pasensya na!`;
