@@ -7,6 +7,7 @@ interface EnvConfig {
   DATABASE_URL: string;
   GROQ_API_KEY: string;
   GROQ_MODEL: string;
+  GROQ_FALLBACK_MODEL: string;
   CLIENT_URL: string;
   NODE_ENV: string;
 }
@@ -24,6 +25,7 @@ export const env: EnvConfig = {
   DATABASE_URL: getEnvVar("DATABASE_URL", ""),
   GROQ_API_KEY: getEnvVar("GROQ_API_KEY"),
   GROQ_MODEL: getEnvVar("GROQ_MODEL", "llama-3.3-70b-versatile"),
+  GROQ_FALLBACK_MODEL: getEnvVar("GROQ_FALLBACK_MODEL", "llama-3.1-8b-instant"),
   CLIENT_URL: getEnvVar("CLIENT_URL", "http://localhost:5173"),
   NODE_ENV: getEnvVar("NODE_ENV", "development"),
 };
